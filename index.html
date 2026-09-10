@@ -3,76 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Warframe Arbitration Overlay</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0);
-      overflow: hidden;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #ffffff;
-      display: flex;
-      justify-content: flex-end;
-      align-items: flex-start;
-    }
-
-    .arb-card {
-      background: rgba(15, 18, 24, 0.5);
-      padding: 10px 16px;
-      margin: 0px;
-      border-radius: 6px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .section {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .title {
-      font-size: 11px;
-      color: #2ecc71;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 2px;
-    }
-
-    .current-node {
-      font-size: 16px;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-
-    .timer-container {
-      font-size: 12px;
-      color: #bdc3c7;
-      margin-top: 2px;
-    }
-
-    .timer {
-      color: #e74c3c;
-      font-weight: bold;
-    }
-
-    .divider-v {
-      width: 1px;
-      height: 36px;
-      background-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .next-node {
-      font-size: 14px;
-      color: #ecf0f1;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-  </style>
+  <!-- CSSファイルの読み込み -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -96,77 +28,7 @@
     </div>
   </div>
 
-  <script>
-
-    const rawArbysData = `
-`;
-
-    let arbSchedule = [];
-
-    function parseData() {
-      const lines = rawArbysData.trim().split('\n');
-
-      const parsedItems = lines.map(line => {
-        const parts = line.trim().split(/[, \t]+/);
-        const timestamp = parseInt(parts[0], 10);
-        const node = parts.slice(1).join(' ');
-        return { timestamp, node };
-      }).filter(item => !isNaN(item.timestamp) && item.node);
-
-      if (parsedItems.length === 0) return;
-
-      // タイムスタンプ昇順にソート
-      parsedItems.sort((a, b) => a.timestamp - b.timestamp);
-      arbSchedule = parsedItems;
-
-      updateDisplay();
-    }
-
-    function updateDisplay() {
-      if (arbSchedule.length === 0) {
-        document.getElementById('current-node').textContent = 'データ未設定';
-        document.getElementById('next-node').textContent = '--';
-        document.getElementById('timer').textContent = '--:--';
-        return;
-      }
-
-      const now = Math.floor(Date.now() / 1000);
-      
-      // 現在時刻の毎時0分のタイムスタンプ
-      const currentHourStart = now - (now % 3600);
-
-      // 1. タイムスタンプが一致するデータを検索
-      let currentIndex = arbSchedule.findIndex(item => item.timestamp === currentHourStart);
-
-      // 2. 一致するものがない場合、先頭データからの経過時間（時間単位）でインデックスを計算
-      if (currentIndex === -1) {
-        const baseTimestamp = arbSchedule[0].timestamp;
-        const hoursPassed = Math.floor((currentHourStart - baseTimestamp) / 3600);
-        currentIndex = ((hoursPassed % arbSchedule.length) + arbSchedule.length) % arbSchedule.length;
-      }
-
-      if (currentIndex !== -1 && arbSchedule[currentIndex]) {
-        const currentArb = arbSchedule[currentIndex];
-        const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
-
-        document.getElementById('current-node').textContent = currentArb.node;
-        document.getElementById('next-node').textContent = nextArb ? nextArb.node : '--';
-
-        // 次の毎時0分00秒までの残り秒数
-        const remainingSeconds = 3600 - (now % 3600);
-        const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
-        const secs = String(remainingSeconds % 60).padStart(2, '0');
-
-        document.getElementById('timer').textContent = `${mins}:${secs}`;
-      } else {
-        document.getElementById('current-node').textContent = '該当データなし';
-        document.getElementById('next-node').textContent = '--';
-        document.getElementById('timer').textContent = '--:--';
-      }
-    }
-
-    parseData();
-    setInterval(updateDisplay, 1000);
-  </script>
+  <!-- JavaScriptファイルの読み込み -->
+  <script src="script.js"></script>
 </body>
 </html>
