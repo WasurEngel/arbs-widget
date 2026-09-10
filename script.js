@@ -3,7 +3,6 @@ let arbSchedule = [];
 // 1. arbys.txt を取得して解析する関数
 async function fetchAndParseArbysData() {
   try {
-    // キャッシュ対策としてタイムスタンプを付与して常に最新データを取得
     const response = await fetch(`./arbys.txt?t=${Date.now()}`);
     
     if (!response.ok) {
@@ -15,7 +14,7 @@ async function fetchAndParseArbysData() {
 
   } catch (error) {
     console.error('arbys.txt の取得に失敗しました:', error);
-    document.getElementById('current-node').textContent = 'データ読み込みエラー';
+    document.getElementById('current-node').textContent = '取得エラー';
   }
 }
 
@@ -59,17 +58,21 @@ function updateDisplay() {
   // 1. タイムスタンプが一致するデータを検索
   let currentIndex = arbSchedule.findIndex(item => item.timestamp === currentHourStart);
 
-  // 2. 一致するものがない場合、先頭データからの経過時間（時間単位）でインデックスを計算
+  // 2. 一致するものがない場合、ローテーション計算（修正箇所）
   if (currentIndex === -1) {
     const baseTimestamp = arbSchedule[0].timestamp;
+    // 経過時間（時間単位）を算出
     const hoursPassed = Math.floor((currentHourStart - baseTimestamp) / 3600);
-    currentIndex = ((hoursPassed % arbSchedule.length) + arbSchedule.length) % arbSchedule.length;
+    // 配列の長さで割った余りを計算（負の数にも対応）
+    const totalItems = arbSchedule.length;
+    currentIndex = ((hoursPassed % totalItems) + totalItems) % totalItems;
   }
 
-  if (currentIndex !== -1 && arbSchedule[currentIndex]) {
-    const currentArb = arbSchedule[currentIndex];
-    const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
+  const currentArb = arbSchedule[currentIndex];
+  const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
 
+  if (currentArb) {
+    // ノードID（SolNode64など）をそのまま表示
     document.getElementById('current-node').textContent = currentArb.node;
     document.getElementById('next-node').textContent = nextArb ? nextArb.node : '--';
 
@@ -86,11 +89,8 @@ function updateDisplay() {
   }
 }
 
-// 初期実行（テキストファイルを取得）
+// 初期実行
 fetchAndParseArbysData();
 
-// タイマー更新（1秒ごと）
+// 1秒ごとにタイマー更新
 setInterval(updateDisplay, 1000);
-
-// ファイルの自動再読み込み（例: 1時間ごとにテキストを再取得したい場合）
-setInterval(fetchAndParseArbysData, 3600000);
