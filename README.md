@@ -8,7 +8,7 @@ OBSなどの配信ソフトで使用できる、Warframeの仲裁ミッション
 
 ### 1. ウィジェットURLのコピー
 まずは以下の対象URLをコピーします。
-*  `https://wasurengel.github.io/arbys-obs-widget/ 
+*  `https://wasurengel.github.io/arbys-obs-widget/`
 
 ### 2. OBSに「ブラウザ」ソースを追加する
 1. **OBS Studio**を起動します。
