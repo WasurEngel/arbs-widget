@@ -1,17 +1,21 @@
 let arbSchedule = [];
 let nodeMap = {};
 
-// 1. solNodes.json を取得（大文字・小文字をファイル名と完全に合わせる）
+// 1. solNodes.json を取得する関数
 async function fetchNodeMap() {
+  console.log('1. solNodes.json の取得を開始します...');
   try {
     const response = await fetch(`./solNodes.json?t=${Date.now()}`);
+    console.log('solNodes.json レスポンスステータス:', response.status);
+
     if (response.ok) {
       nodeMap = await response.json();
+      console.log('2. solNodes.json の読み込み成功:', Object.keys(nodeMap).length, '件のノードデータ');
     } else {
-      console.warn('solNodes.json の取得に失敗しました:', response.status);
+      console.warn('solNodes.json が見つかりませんでした (HTTP ' + response.status + ')');
     }
   } catch (error) {
-    console.warn('ノードマップの取得エラー:', error);
+    console.error('solNodes.json 取得時の通信エラー:', error);
   }
 }
 
@@ -19,17 +23,18 @@ async function fetchNodeMap() {
 function getNodeName(nodeId) {
   if (!nodeId) return '--';
   
-  // nodeMap[nodeId] が存在し、その中に value があればそれを返す
+  // nodeMap[nodeId] が存在し、その中に value プロパティがあれば返す
   if (nodeMap[nodeId] && nodeMap[nodeId].value) {
     return nodeMap[nodeId].value;
   }
   
-  // マップになければID（SolNode1など）をそのまま返す
+  // なければ ID そのものを返す
   return nodeId;
 }
 
-// 3. arbys.txt の取得と解析
+// 3. arbys.txt を取得して解析する関数
 async function fetchAndParseArbysData() {
+  console.log('3. arbys.txt の取得を開始します...');
   try {
     const response = await fetch(`./arbys.txt?t=${Date.now()}`);
     if (!response.ok) {
@@ -45,7 +50,7 @@ async function fetchAndParseArbysData() {
   }
 }
 
-// 4. データ解析
+// 4. テキストデータを解析する関数
 function parseData(textData) {
   const lines = textData.trim().split('\n');
 
@@ -67,7 +72,7 @@ function parseData(textData) {
   updateDisplay();
 }
 
-// 5. 表示更新
+// 5. 画面表示の更新処理
 function updateDisplay() {
   if (arbSchedule.length === 0) return;
 
@@ -102,8 +107,9 @@ function updateDisplay() {
   }
 }
 
-// 初期化
+// 初期化処理
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('プログラムを開始します...');
   await fetchNodeMap();
   await fetchAndParseArbysData();
 
