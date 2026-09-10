@@ -4,7 +4,7 @@ let nodeMap = {}; // ノード辞書を保持するオブジェクト
 // 1. ノードマップ（JSON）を取得する関数
 async function fetchNodeMap() {
   try {
-    const response = await fetch(`./solnodes.json?t=${Date.now()}`);
+    const response = await fetch(`./solNodes.json?t=${Date.now()}`);
     if (response.ok) {
       nodeMap = await response.json();
       console.log('ノードマップの読み込み完了:', Object.keys(nodeMap).length, '件');
