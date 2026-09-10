@@ -1,27 +1,34 @@
 let arbSchedule = [];
-let nodeMap = {}; // ノード辞書を保持するオブジェクト
+let nodeMap = {};
 
-// 1. ノードマップ（JSON）を取得する関数
+// 1. solNodes.json を取得（大文字・小文字をファイル名と完全に合わせる）
 async function fetchNodeMap() {
   try {
     const response = await fetch(`./solNodes.json?t=${Date.now()}`);
     if (response.ok) {
       nodeMap = await response.json();
-      console.log('ノードマップの読み込み完了:', Object.keys(nodeMap).length, '件');
+    } else {
+      console.warn('solNodes.json の取得に失敗しました:', response.status);
     }
   } catch (error) {
-    console.warn('ノードマップの取得に失敗しました（IDをそのまま表示します）:', error);
+    console.warn('ノードマップの取得エラー:', error);
   }
 }
 
-// 2. ノードIDを表示用の名称に変換するヘルパー関数
+// 2. ノード名（value）を取り出す処理
 function getNodeName(nodeId) {
   if (!nodeId) return '--';
-  // マップに定義があれば変換、なければノードIDをそのまま表示
-  return nodeMap[nodeId] || nodeId;
+  
+  // nodeMap[nodeId] が存在し、その中に value があればそれを返す
+  if (nodeMap[nodeId] && nodeMap[nodeId].value) {
+    return nodeMap[nodeId].value;
+  }
+  
+  // マップになければID（SolNode1など）をそのまま返す
+  return nodeId;
 }
 
-// 3. arbys.txt を取得して解析する関数
+// 3. arbys.txt の取得と解析
 async function fetchAndParseArbysData() {
   try {
     const response = await fetch(`./arbys.txt?t=${Date.now()}`);
@@ -38,7 +45,7 @@ async function fetchAndParseArbysData() {
   }
 }
 
-// 4. テキストデータを解析する関数
+// 4. データ解析
 function parseData(textData) {
   const lines = textData.trim().split('\n');
 
@@ -60,7 +67,7 @@ function parseData(textData) {
   updateDisplay();
 }
 
-// 5. 画面表示の更新処理
+// 5. 表示更新
 function updateDisplay() {
   if (arbSchedule.length === 0) return;
 
@@ -80,7 +87,6 @@ function updateDisplay() {
   const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
 
   if (currentArb) {
-    // getNodeName() を通してミッション名に変換して表示
     document.getElementById('current-node').textContent = getNodeName(currentArb.node);
     document.getElementById('next-node').textContent = nextArb ? getNodeName(nextArb.node) : '--';
 
@@ -96,17 +102,11 @@ function updateDisplay() {
   }
 }
 
-// 初期化処理
+// 初期化
 document.addEventListener('DOMContentLoaded', async () => {
-  // まずノードマップを読み込み
   await fetchNodeMap();
-
-  // その後でスケジュールデータを取得
   await fetchAndParseArbysData();
 
-  // 1秒ごとにタイマー表示更新
   setInterval(updateDisplay, 1000);
-
-  // 10分ごとに arbys.txt を再取得
   setInterval(fetchAndParseArbysData, 600000);
 });
