@@ -7,7 +7,8 @@ OBS用のウィジェット
 * **出典**: [browse.wf (calamity-inc)](https://github.com/calamity-inc/browse.wf)
 * **ライセンス**: MIT License
 * **著作権表示**: Copyright (c) 2025 Calamity, Inc.
-
 ##
-* 本ツールはファン作製の非公式ツールであり、Digital Extremes Ltd. との直接の提携関係はありません。
+* **仲裁Tier表データ**: Arbitration Goons
 * ノードデータ等の参照にはコミュニティ（WFCD等）のデータを利用しています。
+
+* 本ツールはファン作製の非公式ツールであり、Digital Extremes Ltd. との直接の提携関係はありません。
