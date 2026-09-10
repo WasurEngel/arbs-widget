@@ -1,10 +1,30 @@
 let arbSchedule = [];
+let nodeMap = {}; // ノード辞書を保持するオブジェクト
 
-// 1. arbys.txt を取得して解析する関数
+// 1. ノードマップ（JSON）を取得する関数
+async function fetchNodeMap() {
+  try {
+    const response = await fetch(`./solnodes.json?t=${Date.now()}`);
+    if (response.ok) {
+      nodeMap = await response.json();
+      console.log('ノードマップの読み込み完了:', Object.keys(nodeMap).length, '件');
+    }
+  } catch (error) {
+    console.warn('ノードマップの取得に失敗しました（IDをそのまま表示します）:', error);
+  }
+}
+
+// 2. ノードIDを表示用の名称に変換するヘルパー関数
+function getNodeName(nodeId) {
+  if (!nodeId) return '--';
+  // マップに定義があれば変換、なければノードIDをそのまま表示
+  return nodeMap[nodeId] || nodeId;
+}
+
+// 3. arbys.txt を取得して解析する関数
 async function fetchAndParseArbysData() {
   try {
     const response = await fetch(`./arbys.txt?t=${Date.now()}`);
-    
     if (!response.ok) {
       throw new Error(`HTTPエラー: ${response.status}`);
     }
@@ -18,7 +38,7 @@ async function fetchAndParseArbysData() {
   }
 }
 
-// 2. テキストデータを解析する関数
+// 4. テキストデータを解析する関数
 function parseData(textData) {
   const lines = textData.trim().split('\n');
 
@@ -34,30 +54,21 @@ function parseData(textData) {
     return;
   }
 
-  // タイムスタンプ昇順にソート
   parsedItems.sort((a, b) => a.timestamp - b.timestamp);
   arbSchedule = parsedItems;
 
-  // データ解析完了後に初めて表示を更新
   updateDisplay();
 }
 
-// 3. 画面表示の更新処理
+// 5. 画面表示の更新処理
 function updateDisplay() {
-  // データがまだ取得できていない場合は何もしない（画面の「解析中...」を維持）
-  if (arbSchedule.length === 0) {
-    return;
-  }
+  if (arbSchedule.length === 0) return;
 
   const now = Math.floor(Date.now() / 1000);
-  
-  // 現在時刻の毎時0分のタイムスタンプ
   const currentHourStart = now - (now % 3600);
 
-  // 1. タイムスタンプが一致するデータを検索
   let currentIndex = arbSchedule.findIndex(item => item.timestamp === currentHourStart);
 
-  // 2. 一致するものがない場合、ローテーション計算
   if (currentIndex === -1) {
     const baseTimestamp = arbSchedule[0].timestamp;
     const hoursPassed = Math.floor((currentHourStart - baseTimestamp) / 3600);
@@ -69,8 +80,9 @@ function updateDisplay() {
   const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
 
   if (currentArb) {
-    document.getElementById('current-node').textContent = currentArb.node;
-    document.getElementById('next-node').textContent = nextArb ? nextArb.node : '--';
+    // getNodeName() を通してミッション名に変換して表示
+    document.getElementById('current-node').textContent = getNodeName(currentArb.node);
+    document.getElementById('next-node').textContent = nextArb ? getNodeName(nextArb.node) : '--';
 
     const remainingSeconds = 3600 - (now % 3600);
     const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
@@ -84,14 +96,17 @@ function updateDisplay() {
   }
 }
 
-// HTMLの読み込み完了後に実行
-document.addEventListener('DOMContentLoaded', () => {
-  // 初回データ取得
-  fetchAndParseArbysData();
+// 初期化処理
+document.addEventListener('DOMContentLoaded', async () => {
+  // まずノードマップを読み込み
+  await fetchNodeMap();
 
-  // 1秒ごとにタイマー表示のみ更新
+  // その後でスケジュールデータを取得
+  await fetchAndParseArbysData();
+
+  // 1秒ごとにタイマー表示更新
   setInterval(updateDisplay, 1000);
 
-  // 10分ごとに arbys.txt を再取得（GitHub上の更新に追従させる場合）
+  // 10分ごとに arbys.txt を再取得
   setInterval(fetchAndParseArbysData, 600000);
 });
