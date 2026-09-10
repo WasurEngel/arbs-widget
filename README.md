@@ -1,4 +1,4 @@
-# arbs-widget
+# arbys-obs-widget
 OBS用のウィジェット
 
 ## 外部データについて
