@@ -59,7 +59,7 @@ function getNodeName(nodeId) {
 
   // Tierが見つかれば末尾に付与
   if (matchedTier) {
-    return `${baseName} (${matchedTier})`;
+    return `${baseName}  ${matchedTier}`;
   }
 
   return baseName;
