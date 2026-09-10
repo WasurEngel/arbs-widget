@@ -1,10 +1,27 @@
-﻿const rawArbysData = `
-`;
-
 let arbSchedule = [];
 
-function parseData() {
-  const lines = rawArbysData.trim().split('\n');
+// 1. arbys.txt を取得して解析する関数
+async function fetchAndParseArbysData() {
+  try {
+    // キャッシュ対策としてタイムスタンプを付与して常に最新データを取得
+    const response = await fetch(`./arbys.txt?t=${Date.now()}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTPエラー: ${response.status}`);
+    }
+
+    const rawArbysData = await response.text();
+    parseData(rawArbysData);
+
+  } catch (error) {
+    console.error('arbys.txt の取得に失敗しました:', error);
+    document.getElementById('current-node').textContent = 'データ読み込みエラー';
+  }
+}
+
+// 2. テキストデータを解析する関数
+function parseData(textData) {
+  const lines = textData.trim().split('\n');
 
   const parsedItems = lines.map(line => {
     const parts = line.trim().split(/[, \t]+/);
@@ -13,7 +30,10 @@ function parseData() {
     return { timestamp, node };
   }).filter(item => !isNaN(item.timestamp) && item.node);
 
-  if (parsedItems.length === 0) return;
+  if (parsedItems.length === 0) {
+    document.getElementById('current-node').textContent = 'データ未設定';
+    return;
+  }
 
   // タイムスタンプ昇順にソート
   parsedItems.sort((a, b) => a.timestamp - b.timestamp);
@@ -22,6 +42,7 @@ function parseData() {
   updateDisplay();
 }
 
+// 3. 画面表示の更新処理
 function updateDisplay() {
   if (arbSchedule.length === 0) {
     document.getElementById('current-node').textContent = 'データ未設定';
@@ -65,5 +86,11 @@ function updateDisplay() {
   }
 }
 
-parseData();
+// 初期実行（テキストファイルを取得）
+fetchAndParseArbysData();
+
+// タイマー更新（1秒ごと）
 setInterval(updateDisplay, 1000);
+
+// ファイルの自動再読み込み（例: 1時間ごとにテキストを再取得したい場合）
+setInterval(fetchAndParseArbysData, 3600000);
