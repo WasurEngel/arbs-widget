@@ -38,15 +38,14 @@ function parseData(textData) {
   parsedItems.sort((a, b) => a.timestamp - b.timestamp);
   arbSchedule = parsedItems;
 
+  // データ解析完了後に初めて表示を更新
   updateDisplay();
 }
 
 // 3. 画面表示の更新処理
 function updateDisplay() {
+  // データがまだ取得できていない場合は何もしない（画面の「解析中...」を維持）
   if (arbSchedule.length === 0) {
-    document.getElementById('current-node').textContent = 'データ未設定';
-    document.getElementById('next-node').textContent = '--';
-    document.getElementById('timer').textContent = '--:--';
     return;
   }
 
@@ -58,12 +57,10 @@ function updateDisplay() {
   // 1. タイムスタンプが一致するデータを検索
   let currentIndex = arbSchedule.findIndex(item => item.timestamp === currentHourStart);
 
-  // 2. 一致するものがない場合、ローテーション計算（修正箇所）
+  // 2. 一致するものがない場合、ローテーション計算
   if (currentIndex === -1) {
     const baseTimestamp = arbSchedule[0].timestamp;
-    // 経過時間（時間単位）を算出
     const hoursPassed = Math.floor((currentHourStart - baseTimestamp) / 3600);
-    // 配列の長さで割った余りを計算（負の数にも対応）
     const totalItems = arbSchedule.length;
     currentIndex = ((hoursPassed % totalItems) + totalItems) % totalItems;
   }
@@ -72,11 +69,9 @@ function updateDisplay() {
   const nextArb = arbSchedule[(currentIndex + 1) % arbSchedule.length];
 
   if (currentArb) {
-    // ノードID（SolNode64など）をそのまま表示
     document.getElementById('current-node').textContent = currentArb.node;
     document.getElementById('next-node').textContent = nextArb ? nextArb.node : '--';
 
-    // 次の毎時0分00秒までの残り秒数
     const remainingSeconds = 3600 - (now % 3600);
     const mins = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
     const secs = String(remainingSeconds % 60).padStart(2, '0');
@@ -89,8 +84,14 @@ function updateDisplay() {
   }
 }
 
-// 初期実行
-fetchAndParseArbysData();
+// HTMLの読み込み完了後に実行
+document.addEventListener('DOMContentLoaded', () => {
+  // 初回データ取得
+  fetchAndParseArbysData();
 
-// 1秒ごとにタイマー更新
-setInterval(updateDisplay, 1000);
+  // 1秒ごとにタイマー表示のみ更新
+  setInterval(updateDisplay, 1000);
+
+  // 10分ごとに arbys.txt を再取得（GitHub上の更新に追従させる場合）
+  setInterval(fetchAndParseArbysData, 600000);
+});
