@@ -1,40 +1,85 @@
 let arbSchedule = [];
 let nodeMap = {};
+let tierMap = {}; // ノード名 -> Tier名 のマッピング (例: "Munio": "A-Tier")
 
-// 1. solNodes.json を取得する関数
+// 1. solNodes.json を取得
 async function fetchNodeMap() {
-  console.log('1. solNodes.json の取得を開始します...');
   try {
     const response = await fetch(`./solNodes.json?t=${Date.now()}`);
-    console.log('solNodes.json レスポンスステータス:', response.status);
-
     if (response.ok) {
       nodeMap = await response.json();
-      console.log('2. solNodes.json の読み込み成功:', Object.keys(nodeMap).length, '件のノードデータ');
-    } else {
-      console.warn('solNodes.json が見つかりませんでした (HTTP ' + response.status + ')');
     }
   } catch (error) {
-    console.error('solNodes.json 取得時の通信エラー:', error);
+    console.warn('solNodes.json 取得エラー:', error);
   }
 }
 
-// 2. ノード名（value）を取り出す処理
+// 2. tier_data.txt を取得して解析
+async function fetchTierData() {
+  try {
+    const response = await fetch(`./tier_data.txt?t=${Date.now()}`);
+    if (!response.ok) return;
+
+    const text = await response.text();
+    const lines = text.trim().split('\n');
+
+    lines.forEach(line => {
+      // カンマまたはダブルクォーテーションで分離
+      // 例: S-Tier,"Tyana Pass, Cytherean, Alator..."
+      const firstCommaIndex = line.indexOf(',');
+      if (firstCommaIndex === -1) return;
+
+      const tier = line.substring(0, firstCommaIndex).trim(); // "S-Tier"
+      let nodesString = line.substring(firstCommaIndex + 1).trim(); // '"Tyana Pass, Cytherean..."'
+
+      // ダブルクォーテーションを除去
+      nodesString = nodesString.replace(/^"+|"+$/g, '');
+
+      // ノードリストを分解してマッピングに登録
+      const nodeList = nodesString.split(',').map(n => n.trim());
+      nodeList.forEach(nodeName => {
+        if (nodeName) {
+          tierMap[nodeName] = tier;
+        }
+      });
+    });
+
+    console.log('Tierデータの読み込み完了:', Object.keys(tierMap).length, '件');
+  } catch (error) {
+    console.warn('tier_data.txt 取得エラー:', error);
+  }
+}
+
+// 3. ノード名とTierを組み合わせた表示名を取得
 function getNodeName(nodeId) {
   if (!nodeId) return '--';
-  
-  // nodeMap[nodeId] が存在し、その中に value プロパティがあれば返す
+
+  // solNodes.json からミッション名（例: "Galatea (Neptune)"）を取得
+  let baseName = nodeId;
   if (nodeMap[nodeId] && nodeMap[nodeId].value) {
-    return nodeMap[nodeId].value;
+    baseName = nodeMap[nodeId].value;
   }
-  
-  // なければ ID そのものを返す
-  return nodeId;
+
+  // tierMap に含まれるノード名が baseName 内に存在するか判定
+  let matchedTier = null;
+  for (const [nodeName, tier] of Object.entries(tierMap)) {
+    // 例: "Galatea (Neptune)" が "Galatea" を含んでいるか確認
+    if (baseName.includes(nodeName)) {
+      matchedTier = tier;
+      break;
+    }
+  }
+
+  // Tierが見つかれば末尾に付与
+  if (matchedTier) {
+    return `${baseName} (${matchedTier})`;
+  }
+
+  return baseName;
 }
 
-// 3. arbys.txt を取得して解析する関数
+// 4. arbys.txt の取得と解析
 async function fetchAndParseArbysData() {
-  console.log('3. arbys.txt の取得を開始します...');
   try {
     const response = await fetch(`./arbys.txt?t=${Date.now()}`);
     if (!response.ok) {
@@ -50,7 +95,7 @@ async function fetchAndParseArbysData() {
   }
 }
 
-// 4. テキストデータを解析する関数
+// 5. データ解析
 function parseData(textData) {
   const lines = textData.trim().split('\n');
 
@@ -72,7 +117,7 @@ function parseData(textData) {
   updateDisplay();
 }
 
-// 5. 画面表示の更新処理
+// 6. 画面表示の更新
 function updateDisplay() {
   if (arbSchedule.length === 0) return;
 
@@ -107,10 +152,10 @@ function updateDisplay() {
   }
 }
 
-// 初期化処理
+// 初期化
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('プログラムを開始します...');
-  await fetchNodeMap();
+  // マップデータとTierデータを並行して読み込み
+  await Promise.all([fetchNodeMap(), fetchTierData()]);
   await fetchAndParseArbysData();
 
   setInterval(updateDisplay, 1000);
