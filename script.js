@@ -14,39 +14,26 @@ async function fetchNodeMap() {
   }
 }
 
-// 2. tier_data.txt を取得して解析
+// 2. tier_data.json を取得してマップ登録
 async function fetchTierData() {
   try {
-    const response = await fetch(`./tier_data.txt?t=${Date.now()}`);
+    const response = await fetch(`./tier_data.json?t=${Date.now()}`);
     if (!response.ok) return;
 
-    const text = await response.text();
-    const lines = text.trim().split('\n');
+    const data = await response.json();
 
-    lines.forEach(line => {
-      // カンマまたはダブルクォーテーションで分離
-      // 例: S-Tier,"Tyana Pass, Cytherean, Alator..."
-      const firstCommaIndex = line.indexOf(',');
-      if (firstCommaIndex === -1) return;
-
-      const tier = line.substring(0, firstCommaIndex).trim(); // "S-Tier"
-      let nodesString = line.substring(firstCommaIndex + 1).trim(); // '"Tyana Pass, Cytherean..."'
-
-      // ダブルクォーテーションを除去
-      nodesString = nodesString.replace(/^"+|"+$/g, '');
-
-      // ノードリストを分解してマッピングに登録
-      const nodeList = nodesString.split(',').map(n => n.trim());
+    // { "S-Tier": ["Tyana Pass", ...], ... } を tierMap に展開
+    Object.entries(data).forEach(([tier, nodeList]) => {
       nodeList.forEach(nodeName => {
         if (nodeName) {
-          tierMap[nodeName] = tier;
+          tierMap[nodeName.trim()] = tier;
         }
       });
     });
 
     console.log('Tierデータの読み込み完了:', Object.keys(tierMap).length, '件');
   } catch (error) {
-    console.warn('tier_data.txt 取得エラー:', error);
+    console.warn('tier_data.json 取得エラー:', error);
   }
 }
 
