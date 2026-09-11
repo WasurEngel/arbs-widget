@@ -1,3 +1,4 @@
+[English README](README_en.md) / 日本語
 # arbys-obs-widget
 
 OBSなどの配信ソフトで使用できる、Warframeの仲裁ミッション表示用オーバーレイウィジェットです。
