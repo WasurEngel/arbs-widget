@@ -38,6 +38,10 @@ Click **OK** when finished.
 The overlay will appear in the OBS preview window. Drag the red boundary box to position and resize it wherever you like.
 
 ---
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Credits & External Data Sources
 
 This tool utilizes data provided by the following communities and repositories:
