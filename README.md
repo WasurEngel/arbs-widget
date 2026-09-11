@@ -1,7 +1,7 @@
 # arbys-obs-widget
 
 OBSなどの配信ソフトで使用できる、Warframeの仲裁ミッション表示用オーバーレイウィジェットです。
-
+![ウィジェットのプレビュー](preview.png)
 ---
 
 ## 「arby-obs-widget」の設定手順
